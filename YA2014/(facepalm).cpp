@@ -6,7 +6,6 @@
 #include <regex>
 
 //SUCCESS
-
 int main() {
     std::regex before(R"(\([a-zA-Z]+\)|[^a-zA-Z0-9() ]\))");
     std::string input, output;

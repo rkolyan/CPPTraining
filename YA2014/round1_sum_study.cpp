@@ -3,6 +3,8 @@
 #include <vector>
 #include <list>
 
+//SUCCESS
+
 bool compare(char a, char b) {
     return a > b;
 }

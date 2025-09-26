@@ -1,90 +1,225 @@
-//
-// Created by rkolyan on 09.09.2024.
-//
-
 #include <iostream>
-#include <stack>
+#include <climits>
 #include <vector>
+#include <list>
+#include <stack>
+#include <map>
 
+//почти SUCCESS
+//падает на 7-м тесте в связи с превышением по времени
+//у меня простой поиск 
+//
 
-typedef short number_t;
+/*
+    
+*/
 
-//1. Создать и заполнить матрицу
-int create_matr(number_t &N, number_t &M, std::vector<number_t> &matr) {
-    std::cin >> N >> M;
-
-    matr.resize(N*N);
-    for (number_t i = 0; i < N; i++) {
-        for (number_t j = 0; j < N; j++) {
-            matr[i * N + j] = -1;
-        }
-    }
-
-    number_t a, b, c;
-    for (number_t l = 0; l < M; l++) {
-        std::cin >> a >> b >> c;
-        matr[(a - 1) * N + (b - 1)] = c;
-        matr[(b - 1) * N + (a - 1)] = c;
-    }
-    return 0;
-}
-
-struct vertice_t {
-    number_t num;
-    number_t counter;
-    number_t path_len;
+using vertice_t = unsigned int;
+using path_t = unsigned int;
+using index_t = unsigned int;
+using count_t = int;
+enum class Mark {
+    UNMARKED,
+    MARKED
 };
 
-//2. Найти путь из вершины с номером begin в вершину с номером end
-std::pair<number_t, number_t> find_shortest_way(const number_t &begin, const number_t &end, const number_t &N, const std::vector<number_t> matr) {
-    number_t P = 0, min_P = -1, Q = 0, maxQ = 0;
-    std::vector<number_t> indicators;
-    indicators.resize(N);
-    std::stack<vertice_t> path;
+//Быстрая реализация (На основе алгоритма дейкстры)
+void find_longes_shortest_iterative3(const std::vector<std::vector<std::pair<vertice_t, path_t>>> &vertices, count_t &max_count, path_t &min_path_len) {
+    //TODO: 1)Инициализируем массив весов
+    std::vector<std::pair<path_t, count_t>> weights(vertices.size());
+    auto iter = weights.begin();
+    *iter = std::pair<path_t, count_t>(UINT_MAX, 0);
+    std::fill(std::next(iter), weights.end(), std::pair<path_t, count_t>(UINT_MAX, 0));
+    for (vertice_t _tmp = 0; _tmp < vertices.size(); _tmp++) {
+        /*
+        Алгоритм следующий:
+        Ищем вершину с наименьшим путем и весом (v)
+        Помечаем её,
+        Далее выбираем subvector[v], и для каждого её элемента
 
-    for (number_t i = 0; i < N; i++)
-        indicators[i] = false;
-    indicators[begin] = true;
-    path.push(vertice_t{begin, 0, 0});
-    while (!path.empty()) {
-        auto &vertice = path.top();
+        */
+    }
+}
+//Тоже медленная (падает на 11-м тесте)
+//TODO: Надо бы у стека allocator поменять для того, чтоб память не выделять много раз
+void find_longes_shortest_iterative2(const std::vector<std::vector<std::pair<vertice_t, path_t>>> &vertices, count_t &max_count, path_t &min_path_len) {
+    std::vector<Mark> marks;
+    std::vector<std::pair<path_t, count_t>> weights;
+    std::stack<std::pair<vertice_t, index_t>> stack;
+    /*
+        Итак, для каждой вершины добавляем вес - минимальное расстояние, за которой можно до неё дойти
+        Когда мы каждый раз доходим до вершины из пути, то мы сравниваем текущий путь с весов вершины,
+        если вес вершины меньше, то сбрасываем стек (поиск не имеет смысла), если вес вершины равен, то
+        сравниваем с количеством дорог (вес вершины состоит из расстояния и количества дорог), если вес
+        вершины больше, то обновляем вес текущими значениями и идём дальше от этой вершины.
+    */
+    bool onEnter = true;
+    count_t count = 0;
+    path_t path_len = 0;
 
-        if (vertice.counter == N) {//Выход за границу
-            path.pop();
-        } else if (vertice.num == end) {//Проверка, что достигли до конечной точки
-            P = vertice.path_len;
-            Q = static_cast<number_t>(path.size())- 1;
-            if (min_P == -1 || min_P > P) {
-                min_P = P;
-                maxQ = Q;
-            } else if (min_P == P && Q > maxQ) {
-                maxQ = Q;
+    marks.resize(vertices.size());
+    weights.resize(vertices.size());
+    std::fill(marks.begin(), marks.end(), Mark::UNMARKED);
+    std::fill(weights.begin(), weights.end(), std::pair<path_t, count_t>(UINT_MAX, 0));
+    stack.emplace(0, 0);
+    while (!stack.empty()){
+        if (onEnter) {
+            const auto &curr_index = stack.top().first;
+            marks[curr_index] = Mark::MARKED;
+            auto &curr_weight = weights[curr_index];
+            if (path_len < curr_weight.first || (path_len == curr_weight.first && count >= curr_weight.second)) {
+                curr_weight = std::pair<path_t, count_t>(path_len, count);
+                auto &neighbour_index = stack.top().second;
+                const auto neigbours = vertices[curr_index];
+                bool flag = true;
+                while (neighbour_index < neigbours.size() && flag) {
+                    auto next_path = neigbours[neighbour_index];
+                    if (marks[next_path.first] == Mark::UNMARKED) {
+                        flag = false;
+                        count++;
+                        path_len += next_path.second;
+                        stack.emplace(next_path.first, 0);
+                    } else {
+                        neighbour_index++;
+                    }
+                }
+                if (flag) {
+                    onEnter = false;
+                }
+            } else {
+                onEnter = false;
             }
-            indicators[end] = false;
-            path.pop();
-        } else if (indicators[vertice.counter]) {//Проверка наличия в списке
-            vertice.counter++;
-        } else if (vertice.counter != vertice.num && matr[vertice.num * N + vertice.counter] != -1) {
-            path.push(vertice_t{vertice.counter, 0, static_cast<number_t>(vertice.path_len + matr[vertice.num * N + vertice.counter])});
-            indicators[vertice.counter] = true;
-            vertice.counter++;
         } else {
-            vertice.counter++;
+            marks[stack.top().first] = Mark::UNMARKED;
+            stack.pop();
+            if (!stack.empty()) {
+                count--;
+                path_len -= vertices[stack.top().first][stack.top().second].second;
+                stack.top().second++;
+            }
+            onEnter = true;
         }
     }
-    return std::pair<number_t, number_t>{min_P, maxQ};
+    min_path_len = weights[weights.size() - 1].first;
+    max_count = weights[weights.size() - 1].second;
 }
 
-int output_matr(const std::pair<number_t, number_t> &PQ_pair) {
-    std::cout << PQ_pair.first << ' ' << PQ_pair.second;
-    return 0;
+//Старая более медленная версия
+void find_longes_shortest_iterative(const std::vector<std::vector<std::pair<vertice_t, path_t>>> &vertices, std::size_t &max_count, path_t &min_path_len) {
+    std::vector<Mark> marks;
+    std::stack<std::pair<vertice_t, index_t>> stack;
+    bool onEnter = true;
+    std::size_t count = 0;
+    path_t path_len = 0;
+    vertice_t last = vertices.size() - 1;
+
+    min_path_len = ~static_cast<path_t>(0);
+    max_count = 0;
+    marks.resize(vertices.size());
+    std::fill(marks.begin(), marks.end(), Mark::UNMARKED);
+    stack.emplace(0, 0);
+    while (!stack.empty()){
+        if (onEnter) {
+            const auto &curr_index = stack.top().first;
+            marks[curr_index] = Mark::MARKED;
+            auto &neighbour_index = stack.top().second;
+            const auto neigbours = vertices[curr_index];
+            bool flag = true;
+            if (curr_index != last) {
+                while (neighbour_index < neigbours.size() && flag) {
+                    auto next_path = neigbours[neighbour_index];
+                    if (marks[next_path.first] == Mark::UNMARKED) {
+                        flag = false;
+                        count++;
+                        path_len += next_path.second;
+                        stack.emplace(next_path.first, 0);
+                    } else {
+                        neighbour_index++;
+                    }
+                }
+                if (flag) {
+                    onEnter = false;
+                }
+            } else {
+                if (path_len < min_path_len) {
+                    min_path_len = path_len;
+                    max_count = count;
+                } else if (path_len == min_path_len && count > max_count) {
+                    max_count = count;
+                }
+                onEnter = false;
+            }
+        } else {
+            marks[stack.top().first] = Mark::UNMARKED;
+            stack.pop();
+            if (!stack.empty()) {
+                count--;
+                path_len -= vertices[stack.top().first][stack.top().second].second;
+                stack.top().second++;
+            }
+            onEnter = true;
+        }
+    }
 }
 
-int main() {
-    number_t N, M;
-    std::vector<number_t> matr;
-    create_matr(N, M, matr);
-    auto result = find_shortest_way(0, N-1, N, matr);
-    output_matr(result);
+std::vector<std::vector<std::pair<vertice_t, path_t>>> input_graph() {
+    std::vector<std::vector<std::pair<vertice_t, path_t>>> vertices;
+    std::size_t N, M;
+    
+    std::cin >> N >> M;
+    vertices.resize(N);
+    vertice_t a, b;
+    path_t c;
+    for (auto &vertice : vertices) {
+        vertice.reserve(M);
+    }
+    std::map<std::pair<vertice_t, vertice_t>, path_t> paths;
+    for (std::size_t i = 0; i < M; i++) {
+        std::cin >> a >> b >> c;
+        const std::pair<vertice_t, vertice_t> index1{a-1, b-1}, index2{b-1, a-1};
+        auto iter1 = paths.find(index1);
+        auto iter2 = paths.find(index2);
+        if (iter1 != paths.cend()) {
+            if ((*iter1).second > c) {
+                (*iter1).second = c;
+                (*iter2).second = c;
+            }
+        } else {
+            paths[index1] = c;
+            paths[index2] = c;
+        }
+    }
+    for (const auto &path : paths) {
+        vertices[path.first.first].emplace_back(path.first.second, path.second);
+    }
+    return vertices;
+}
+
+std::vector<std::vector<path_t>> input_matr2() {
+    std::size_t N = 0, M = 0;
+    index_t a = 0, b = 0;
+    path_t c = 0;
+
+    std::cin >> N >> M;
+
+    std::vector<std::vector<path_t>> matr(N);
+    for (auto &row : matr) {
+        row.resize(N);
+        std::fill(row.begin(), row.end(), UINT_MAX);
+    }
+    for (unsigned int i = 0; i < M; i++) {
+        std::cin >> a >> b >> c;   
+        matr[a-1][b-1] = c;
+        matr[b-1][a-1] = c;
+    }
+    return matr;
+}
+
+int main(void) {
+    auto graph = input_matr2();
+    count_t count{};
+    path_t pathlen{};
+    find_longes_shortest_iterative3(graph, count, pathlen);
+    std::cout << pathlen << ' ' << count;
     return 0;
 }

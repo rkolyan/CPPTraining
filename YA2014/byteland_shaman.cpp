@@ -1,55 +1,181 @@
-//
-// Created by rkolyan on 17.01.2025.
-//
+////Created by rkolyan on 17.01.2025.
 
 #include <string>
 #include <iostream>
+#include <iterator>
 #include <regex>
+#include <list>
 
-
+//1)Наивная реализация арифметики длинных чисел
 class BigNum {
-public:
-    BigNum(int num);
-    BigNum &operator+=()
-
-private:
-    int arr[3000];
-};
-
-int find_fibonachi(int arr[3000], int n) {
-    int arr1[3000] = {0};
-
-    if (n > 2) {
-        arr1[0];
-    } else if (n == 1 || n == 2) {
-        arr[0] = 1;
-    } else {
-        arr[0] = 0;
+    BigNum() {
+        _nums.push_back(0);
+        _negative = false;
     }
+    BigNum(unsigned int num) {
+        _nums.push_back(num);
+        _negative = false;
+    }
+    BigNum(int num) {
+        if (num >= 0) {
+            _nums.push_back(static_cast<unsigned int>(num));
+            _negative = false;
+        } else {
+            _nums.push_back(static_cast<unsigned int>(-num));
+            _negative = true;
+        }
+    }
+    BigNum(const std::string &str) {
+        //TODO: Вот здесь самое сложное, нужно научиться переводить 10-е в 256
+        //TODO: Для этого нужно написать отдельную библиотеку DecimalNum
+    }
+    bool operator<(const BigNum &other) {
+        if (_negative) {
+            if (!other._negative) {
+                return true;
+            } else {
+                if (_nums.size() < other._nums.size()) {
+                    return false;
+                } else if (_nums.size() > other._nums.size()) {
+                    return true;
+                } else {
+                    for (auto iter_left = _nums.crbegin(), iter_right = _nums.crbegin(); iter_left != _nums.crend(); ++iter_left, ++iter_right) {
+                        if (*iter_left > *iter_right) {
+                            return true;
+                        }
+                        if (*iter_left < *iter_right) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        } else {
+            if (other._negative) {
+                return false;
+            } else {
+                if (_nums.size() < other._nums.size()) {
+                    return true;
+                } else if (_nums.size() > other._nums.size()) {
+                    return false;
+                } else {
+                    for (auto iter_left = _nums.crbegin(), iter_right = _nums.crbegin(); iter_left != _nums.crend(); ++iter_left, ++iter_right) {
+                        if (*iter_left > *iter_right) {
+                            return false;
+                        }
+                        if (*iter_left < *iter_right) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    bool operator<=(const BigNum &other) {
+        if (_negative) {
+            if (!other._negative) {
+                return true;
+            } else {
+                if (_nums.size() < other._nums.size()) {
+                    return false;
+                } else if (_nums.size() > other._nums.size()) {
+                    return true;
+                } else {
+                    for (auto iter_left = _nums.crbegin(), iter_right = _nums.crbegin(); iter_left != _nums.crend(); ++iter_left, ++iter_right) {
+                        if (*iter_left > *iter_right) {
+                            return true;
+                        }
+                        if (*iter_left < *iter_right) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        } else {
+            if (other._negative) {
+                return false;
+            } else {
+                if (_nums.size() < other._nums.size()) {
+                    return true;
+                } else if (_nums.size() > other._nums.size()) {
+                    return false;
+                } else {
+                    for (auto iter_left = _nums.crbegin(), iter_right = _nums.crbegin(); iter_left != _nums.crend(); ++iter_left, ++iter_right) {
+                        if (*iter_left > *iter_right) {
+                            return false;
+                        }
+                        if (*iter_left < *iter_right) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    bool operator==(const BigNum &other) {
+        if (_negative == other._negative) {
+            if (_nums.size() == other._nums.size()) {
+                for (auto iter_left = _nums.crbegin(), iter_right = _nums.crbegin(); iter_left != _nums.crend(); ++iter_left, ++iter_right) { 
+                    if (*iter_left != *iter_right)
+                        return false;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+    //TODO: Реализзовать несколько версий арифметических сумм, рахностей и тд и сравнить по скорости выполнения
+    BigNum operator+(const BigNum &other) {
+        auto result = BigNum(*this);
+        if (result._negative == other._negative) {
+            if (other._nums.size() > result._nums.size()) {
+                result._nums.resize(other._nums.size(), 0);
+            }
+            result._addAnother(other._nums); 
+        } else {
+            if (result._negative) {
+                //Значит второе число позитивное
+                
+            }
+        }
+    }
+    BigNum operator-(const BigNum &other) {
+        if (other._nums.size() > _nums.size()) {
+            _nums.resize(other._nums.size(), 0);
+        }
+    }
+private:
+    void _addAnother(const std::list<unsigned int> &nums) {
+
+    }    
+    std::list<unsigned int> _nums;
+    bool _negative;
 }
 
 int main(void) {
-    std::string A, B, S, K, AB, BA, BB;
-    int K_count = 0, A_count = 0, B_count = 0, AB_count = 0, BA_count = 0, BB_count = 0;
+    std::string A, B, S, K;
+    std::size_t A_count, B_count;
 
     std::getline(std::cin, A);
     std::getline(std::cin, B);
     std::getline(std::cin, S);
     std::getline(std::cin, K);
-    AB = A + B;
-    BA = B + A;
-    BB = B + B;
-    K_count = std::stoi(K);
 
-    //Захватить
-    std::regex regex(S);
-    A_count = std::distance(std::sregex_iterator(A.begin(), A.end(), regex), std::sregex_iterator());
-    B_count = std::distance(std::sregex_iterator(B.begin(), B.end(), regex), std::sregex_iterator());
-    AB_count = std::distance(std::sregex_iterator(AB.begin(), AB.end(), regex), std::sregex_iterator());
-    BA_count = std::distance(std::sregex_iterator(BA.begin(), BA.end(), regex), std::sregex_iterator());
-    BB_count = std::distance(std::sregex_iterator(BB.begin(), BB.end(), regex), std::sregex_iterator());
+    std::regex S_regex{S};
+    auto start = std::sregex_iterator(A.begin(), A.end(), S_regex);
+    auto stop = std::sregex_iterator();
+    A_count = std::distance(start, stop);
+    start = std::move(std::sregex_iterator(B.begin(), B.end(), S_regex));
+    B_count = std::distance(start, stop);
 
 
-
+    /*
+    1)TODO: Выясняем длину K - от 1 до 3000 символов
+    1 1 2 3  5  8  13  21 34 55
+    2 4 8 16 32 64 128 256
+    2)Далее
+    */
+    
     return 0;
 }
